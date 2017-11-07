@@ -2,6 +2,7 @@ import isObservable from 'is-observable';
 import isPromise from 'is-promise';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
+import { asap } from 'rxjs/scheduler/asap';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/throw';
@@ -11,6 +12,7 @@ import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeAll';
+import 'rxjs/add/operator/observeOn';
 import 'rxjs/add/operator/take';
 import 'rxjs/add/operator/takeUntil';
 import { confirmProps } from './utils';
@@ -248,24 +250,29 @@ export default function createLogicAction$({ action, logic, store, deps, cancel$
 
       // unless rejected, we will process even if allow/next dispatched
       if (shouldProcess) { // processing, was an accept
-        // if action provided is empty, give process orig
-        depObj.action = act || action;
-        try {
-          const retValue = processFn(depObj, dispatch, done);
-          if (dispatchReturn) { // processOption.dispatchReturn true
-            // returning undefined won't dispatch
-            if (typeof retValue === 'undefined') {
-              dispatch$.complete();
-            } else { // defined return value, dispatch
-              dispatch(retValue);
+        // make this async to shorten call stack
+        Observable.of(true)
+        .observeOn(asap)
+        .subscribe(() => {
+          // if action provided is empty, give process orig
+          depObj.action = act || action;
+          try {
+            const retValue = processFn(depObj, dispatch, done);
+            if (dispatchReturn) { // processOption.dispatchReturn true
+              // returning undefined won't dispatch
+              if (typeof retValue === 'undefined') {
+                dispatch$.complete();
+              } else { // defined return value, dispatch
+                dispatch(retValue);
+              }
             }
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error(`unhandled exception in logic named: ${name}`, err);
+            // wrap in observable since might not be an error object
+            dispatch(Observable.throw(err));
           }
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.error(`unhandled exception in logic named: ${name}`, err);
-          // wrap in observable since might not be an error object
-          dispatch(Observable.throw(err));
-        }
+        });
       } else { // not processing, must have been a reject
         dispatch$.complete();
       }
