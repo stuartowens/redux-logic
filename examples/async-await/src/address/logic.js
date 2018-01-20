@@ -4,7 +4,7 @@ import { ADDRESS_FETCH, ADDRESS_FETCH_CANCEL, addressFetchFulfilled,
 
 const delay = 2; // 2s delay for interactive use of cancel/take latest
 
-export const userProfFetchLogic = createLogic({
+export const addressFetchLogic = createLogic({
   type: ADDRESS_FETCH,
   cancelType: ADDRESS_FETCH_CANCEL,
   latest: true, // take latest only
@@ -15,7 +15,7 @@ export const userProfFetchLogic = createLogic({
   process({ httpClient, action }, dispatch, done) {
     const uid = action.payload;
     fetchAddress(httpClient, uid)
-      .then(user => dispatch(addressFetchFulfilled(user)))
+      .then(addresses => dispatch(addressFetchFulfilled(addresses)))
       .catch(err => {
         console.error(err); // might be a render err
         dispatch(addressFetchRejected(err))
@@ -33,20 +33,21 @@ export const userProfFetchLogic = createLogic({
  */
 async function fetchAddress(httpClient, uid) {
   // the delay query param adds arbitrary delay to the response
-  const user =
-    await httpClient.get(`https://reqres.in/api/users/${uid}?delay=${delay}`)
-      .then(resp => resp.data.data); // use data property of payload
-
-  // we can use data from user to fetch fake profile
-  const profile =
-    await httpClient.get(`https://reqres.in/api/profile/${user.id}`)
-      .then(resp => resp.data.data);
-
-  user.profile = profile; // combine profile into user object
-  return user;
+  const addresses =
+    await httpClient({
+      url:`https://znv8ery8od.execute-api.us-east-1.amazonaws.com/Beta/addresses`,
+      method: 'post',
+      data: {
+            "zipcode": "10075",
+            "cuisine": "Italian",
+            "startsWith": "V"
+        },
+      responseType: 'json'
+    }).then(resp => resp.data); // use data property of payload
+    return addresses;
 }
 
 
 export default [
-  userProfFetchLogic
+  addressFetchLogic
 ];

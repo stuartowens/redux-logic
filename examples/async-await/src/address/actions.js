@@ -3,7 +3,7 @@
 // By convention it will match the directory structure to
 // make it easy to locate the src.
 // Also action types will prefix with the capitalized version
-export const key = 'user';
+export const key = 'address';
 
 // action type constants
 export const ADDRESS_FETCH = 'ADDRESS_FETCH';
@@ -19,16 +19,16 @@ export const actionTypes = {
 };
 
 // action creators
-export const addressFetch = (id) => (
+export const addressFetch = (address) => (
   {
     type: ADDRESS_FETCH,
-    payload: id
+    payload: address
   }
 );
 export const addressFetchCancel = () => ({ type: ADDRESS_FETCH_CANCEL });
-export const addressFetchFulfilled = (users) => ({
+export const addressFetchFulfilled = (address) => ({
   type: ADDRESS_FETCH_FULFILLED,
-  payload: users
+  payload: address
 });
 export const addressFetchRejected = (err) => ({
   type: ADDRESS_FETCH_REJECTED,

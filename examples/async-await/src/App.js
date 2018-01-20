@@ -13,6 +13,23 @@ import { component as User,
          actions as userActions } from './user/index';
 const { userProfileFetch, userProfileFetchCancel } = userActions;
 
+import { component as Address,
+         selectors as addressSel,
+         actions as addressActions } from './address/index';
+const { addressFetch, addressFetchCancel } = addressActions;
+
+const CAddress = connect(
+  state => ({
+    address: addressSel.address(state),
+    fetchStatus: addressSel.fetchStatus(state)
+  }),
+  {
+    onFetch: addressFetch,
+    onCancelFetch: addressFetchCancel,
+    onFetchAddress: addressFetch
+  }
+)(Address);
+
 const CUsers = connect(
   state => ({
     users: usersSel.users(state),
@@ -56,7 +73,8 @@ export function App({ user, profileFetchStatus, userProfileFetch,
              <p>Note: fetching has an artificial 2s delay to allow for interacting with the cancellation and take latest functionality.
              </p>
           </div>
-
+          <h2>Addresses</h2>
+          <CAddress />
           <table className="main">
           <tbody>
             <tr className="mainRow">
@@ -71,7 +89,6 @@ export function App({ user, profileFetchStatus, userProfileFetch,
             </tr>
           </tbody>
           </table>
-
         </div>
       </div>
   );
